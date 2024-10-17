@@ -209,6 +209,18 @@ public abstract class AbstractJdbcIT extends TestSuiteBase implements TestResour
                                     jdbcCase.getSourceTable()));
             statement.execute(createSource);
 
+            if (jdbcCase.getAdditionalSql() != null) {
+                String additionalSqlTemplate = jdbcCase.getAdditionalSql();
+                String additionalSql =
+                        String.format(
+                                additionalSqlTemplate,
+                                buildTableInfoWithSchema(
+                                        jdbcCase.getDatabase(),
+                                        jdbcCase.getSchema(),
+                                        jdbcCase.getSourceTable()));
+                statement.execute(additionalSql);
+            }
+
             if (!jdbcCase.isUseSaveModeCreateTable()) {
                 if (jdbcCase.getSinkCreateSql() != null) {
                     createTemplate = jdbcCase.getSinkCreateSql();

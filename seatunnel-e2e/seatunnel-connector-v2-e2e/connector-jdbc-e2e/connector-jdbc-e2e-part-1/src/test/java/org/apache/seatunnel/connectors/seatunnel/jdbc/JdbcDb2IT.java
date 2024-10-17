@@ -20,9 +20,11 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
+import org.apache.seatunnel.e2e.common.container.TestContainer;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.Db2Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -68,7 +70,7 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                     + "(\n"
                     + "    C_BOOLEAN          BOOLEAN,\n"
                     + "    C_SMALLINT         SMALLINT,\n"
-                    + "    C_INT              INTEGER,\n"
+                    + "    C_INT              INTEGER NOT NULL PRIMARY KEY,\n"
                     + "    C_INTEGER          INTEGER,\n"
                     + "    C_BIGINT           BIGINT,\n"
                     + "    C_DECIMAL          DECIMAL(5),\n"
@@ -83,8 +85,18 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                     + "    C_VARCHAR          VARCHAR(255),\n"
                     + "    C_BINARY           BINARY(1),\n"
                     + "    C_VARBINARY        VARBINARY(2048),\n"
-                    + "    C_DATE             DATE\n"
+                    + "    C_DATE             DATE,\n"
+                    + "    C_UPDATED_AT       TIMESTAMP\n"
                     + ");\n";
+
+    private static final String CREATE_TRIGGER_SQL =
+            "CREATE TRIGGER c_updated_at_trigger\n"
+                    + "    BEFORE UPDATE ON %s\n"
+                    + "    REFERENCING NEW AS new_row\n"
+                    + "    FOR EACH ROW\n"
+                    + "BEGIN ATOMIC\n"
+                    + "SET new_row.c_updated_at = CURRENT_TIMESTAMP;\n"
+                    + "END;";;
 
     @Override
     JdbcCase getJdbcCase() {
@@ -111,10 +123,37 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                 .sourceTable(DB2_SOURCE)
                 .sinkTable(DB2_SINK)
                 .createSql(CREATE_SQL)
+                .additionalSql(CREATE_TRIGGER_SQL)
                 .configFile(CONFIG_FILE)
                 .insertSql(insertSql)
                 .testData(testDataSet)
                 .build();
+    }
+
+    @Override
+    protected void checkResult(
+            String executeKey, TestContainer container, Container.ExecResult execResult) {
+        String[] fieldNames = {
+            "C_BOOLEAN",
+            "C_SMALLINT",
+            "C_INT",
+            "C_INTEGER",
+            "C_BIGINT",
+            "C_DECIMAL",
+            "C_DEC",
+            "C_NUMERIC",
+            "C_NUM",
+            "C_REAL",
+            "C_FLOAT",
+            "C_DOUBLE",
+            "C_DOUBLE_PRECISION",
+            "C_CHAR",
+            "C_VARCHAR",
+            "C_BINARY",
+            "C_VARBINARY",
+            "C_DATE",
+        };
+        defaultCompare(executeKey, fieldNames, "C_INTEGER");
     }
 
     @Override

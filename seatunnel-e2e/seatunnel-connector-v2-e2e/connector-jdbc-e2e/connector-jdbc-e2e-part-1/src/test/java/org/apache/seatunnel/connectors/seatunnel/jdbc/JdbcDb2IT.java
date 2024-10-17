@@ -68,7 +68,7 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                     + "(\n"
                     + "    C_BOOLEAN          BOOLEAN,\n"
                     + "    C_SMALLINT         SMALLINT,\n"
-                    + "    C_INT              INTEGER,\n"
+                    + "    C_INT              INTEGER NOT NULL PRIMARY KEY,\n"
                     + "    C_INTEGER          INTEGER,\n"
                     + "    C_BIGINT           BIGINT,\n"
                     + "    C_DECIMAL          DECIMAL(5),\n"
@@ -167,7 +167,7 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                                 String.format("f1_%s", i),
                                 "f".getBytes(),
                                 "test".getBytes(),
-                                Date.valueOf(LocalDate.now()),
+                                Date.valueOf(LocalDate.now())
                             });
             rows.add(row);
         }
